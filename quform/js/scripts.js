@@ -1,5 +1,5 @@
 jQuery(document).ready(function($) {
-	var whatsappNumber = ['1', '915', '003', '6874'].join('');
+	var whatsappNumber = ['86', '191', '500', '36874'].join('');
 	var whatsappMessage = encodeURIComponent("Hello Cay Meridian Trade, I'd like to enquire about sourcing a product.");
 	$('.cm-whatsapp-link').attr('href', 'https://wa.me/' + whatsappNumber + '?text=' + whatsappMessage);
 
