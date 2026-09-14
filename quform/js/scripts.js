@@ -1,6 +1,42 @@
 jQuery(document).ready(function($) {
 	$('form.quform[action^="quform/"]').Quform();
 
+	$('form.quform[action^="https://formsubmit.co/ajax/"]').on('submit', function(event) {
+		event.preventDefault();
+
+		var form = this;
+		var submitButton = $(form).find('button[type="submit"]');
+		var successMessage = $(form).find('.quform-success-message');
+
+		submitButton.prop('disabled', true);
+		successMessage.hide();
+
+		fetch(form.action, {
+			method: 'POST',
+			body: new FormData(form),
+			headers: {
+				Accept: 'application/json'
+			}
+		})
+			.then(function(response) {
+				if (!response.ok) {
+					throw new Error('Form submission failed');
+				}
+
+				return response.json();
+			})
+			.then(function() {
+				form.reset();
+				successMessage.stop(true, true).fadeIn(200);
+			})
+			.catch(function() {
+				window.alert('There was a problem submitting the form. Please try again.');
+			})
+			.finally(function() {
+				submitButton.prop('disabled', false);
+			});
+	});
+
 	// Tooltip settings
 	if ($.isFunction($.fn.qtip)) {
 		$('.quform-tooltip').qtip({
