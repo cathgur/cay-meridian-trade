@@ -1,4 +1,8 @@
 jQuery(document).ready(function($) {
+	var whatsappNumber = ['1', '915', '003', '6874'].join('');
+	var whatsappMessage = encodeURIComponent("Hello Cay Meridian Trade, I'd like to enquire about sourcing a product.");
+	$('.cm-whatsapp-link').attr('href', 'https://wa.me/' + whatsappNumber + '?text=' + whatsappMessage);
+
 	$('form.quform[action^="quform/"]').Quform();
 
 	$('form.quform[action^="https://formspree.io/f/"]').on('submit', function(event) {
