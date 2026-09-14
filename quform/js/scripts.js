@@ -1,5 +1,5 @@
 jQuery(document).ready(function($) {
-	$('form.quform').Quform();
+	$('form.quform[action^="quform/"]').Quform();
 
 	// Tooltip settings
 	if ($.isFunction($.fn.qtip)) {
