@@ -15,26 +15,38 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fix WhatsApp links
-        shell: bash
         run: |
-          WHATSAPP_URL='https://wa.me/8619150036874?text=Hi%20Cay%20Meridian%20Trade%2C%20I%27d%20like%20help%20sourcing%20a%20product%20from%20China.'
-          sed -i "s|href=\"#\" class=\"cm-whatsapp-link\"|href=\"$WHATSAPP_URL\" class=\"cm-whatsapp-link\"|g" index.html
-          sed -i "s|href=\"#\" target=\"_blank\" rel=\"noopener\" class=\"onepagepro-top-bar-social-icon cm-whatsapp-link\"|href=\"$WHATSAPP_URL\" target=\"_blank\" rel=\"noopener\" class=\"onepagepro-top-bar-social-icon cm-whatsapp-link\"|g" index.html
-
-      - name: Add floating WhatsApp button
-        shell: bash
-        run: |
-          if ! grep -q 'cm-whatsapp-float' index.html; then
-            python3 - <<'PY'
+          python3 - <<'PY'
           from pathlib import Path
+          import re
+
           path = Path('index.html')
           html = path.read_text(encoding='utf-8')
           url = 'https://wa.me/8619150036874?text=Hi%20Cay%20Meridian%20Trade%2C%20I%27d%20like%20help%20sourcing%20a%20product%20from%20China.'
-          button = f'''\n<a href="{url}" class="cm-whatsapp-float" target="_blank" rel="noopener" aria-label="Chat with Cay Meridian Trade on WhatsApp"><i class="fa fa-whatsapp"></i></a>\n<style>\n.cm-whatsapp-float{{position:fixed;right:24px;bottom:24px;width:58px;height:58px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#25D366;color:#fff!important;font-size:28px;text-decoration:none!important;box-shadow:0 5px 18px rgba(0,0,0,.25);z-index:99999}}\n@media(max-width:767px){{.cm-whatsapp-float{{right:16px;bottom:16px;width:54px;height:54px;font-size:25px}}}}\n</style>\n'''
-          html = html.replace('</body>', button + '</body>', 1)
+
+          # Replace any existing WhatsApp href, regardless of the number currently in it.
+          html = re.sub(r'href=["\']https?://wa\.me/[^"\']*["\']', f'href="{url}"', html, flags=re.I)
+
+          # Replace the original placeholder WhatsApp links.
+          html = re.sub(r'(<a\s+href=)["\']#["\']([^>]*cm-whatsapp-link[^>]*>)', rf'\1"{url}"\2', html, flags=re.I)
+
+          # Make sure the floating button also uses the correct Chinese number.
+          html = re.sub(r'(<a\s+href=)["\']#["\']([^>]*cm-whatsapp-float[^>]*>)', rf'\1"{url}"\2', html, flags=re.I)
+
+          if 'cm-whatsapp-float' not in html:
+              button = f'''\n<a href="{url}" class="cm-whatsapp-float" target="_blank" rel="noopener" aria-label="Chat with Cay Meridian Trade on WhatsApp"><i class="fa fa-whatsapp"></i></a>\n<style>\n.cm-whatsapp-float{{position:fixed;right:24px;bottom:24px;width:58px;height:58px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#25D366;color:#fff!important;font-size:28px;text-decoration:none!important;box-shadow:0 5px 18px rgba(0,0,0,.25);z-index:99999}}\n@media(max-width:767px){{.cm-whatsapp-float{{right:16px;bottom:16px;width:54px;height:54px;font-size:25px}}}}\n</style>\n'''
+              html = html.replace('</body>', button + '</body>', 1)
+
           path.write_text(html, encoding='utf-8')
           PY
+
+      - name: Verify number before commit
+        run: |
+          if ! grep -q 'wa.me/8619150036874' index.html; then
+            echo 'ERROR: Correct WhatsApp number was not written to index.html.'
+            exit 1
           fi
+          echo 'Correct WhatsApp number confirmed: +86 191 5003 6874'
 
       - name: Commit changes
         run: |
@@ -44,6 +56,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No WhatsApp changes needed.'
           else
-            git commit -m 'Connect website WhatsApp buttons'
+            git commit -m 'Fix WhatsApp country code'
             git push
           fi
